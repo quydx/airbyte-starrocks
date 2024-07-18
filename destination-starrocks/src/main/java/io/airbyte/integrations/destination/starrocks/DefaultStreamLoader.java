@@ -116,11 +116,21 @@ public class DefaultStreamLoader implements StreamLoader {
 
         String responseBody = null;
 
-        try (CloseableHttpClient client = HttpClients.createDefault();) {
+        try (CloseableHttpClient client = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()
+        {
+            public boolean isRedirectable(String method)
+            {
+                return "PUT".equalsIgnoreCase(method)||super.isRedirectable(method);
+            }
+        }).build()
+        ) {
             long startNanoTime = System.nanoTime();
             try (CloseableHttpResponse response = client.execute(httpPut)) {
+                LOG.info("respons is : {}", response);
+
                 HttpEntity responseEntity = response.getEntity();
                 responseBody = EntityUtils.toString(responseEntity);
+                LOG.info("responseBody is : {}", responseBody);
             }
             StreamLoadResponse streamLoadResponse = new StreamLoadResponse();
             StreamLoadResponse.StreamLoadResponseBody streamLoadBody
